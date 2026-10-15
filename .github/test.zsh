@@ -25,15 +25,27 @@ drain() {
   screen=${${screen//$'\e'\[[0-9;?]#[a-zA-Z]/}//$'\r'/}
 }
 
-# Waits up to two seconds for text to appear on screen.
+# Waits up to five seconds for text to appear on screen.
 expect() {
   local i
-  for i in {1..40}; do
+  for i in {1..100}; do
     drain
     [[ $screen == *$1* ]] && return 0
     sleep 0.05
   done
   return 1
+}
+
+# Waits until the shell has drawn nothing new for 0.3 seconds, up to five.
+settle() {
+  local i quiet=0 before
+  for i in {1..100}; do
+    before=$screen
+    sleep 0.05
+    drain
+    [[ $screen == $before ]] && (( ++quiet >= 6 )) && return 0
+    [[ $screen == $before ]] || quiet=0
+  done
 }
 
 # Types keys without pressing Enter, then gives the shell a moment.
@@ -89,11 +101,20 @@ keys 'junk'; keys $'\e' 0.6; keys $'\C-u'; run 'print -r -- cleared > plain-esc'
 [[ $(output plain-esc) == cleared ]] || fail "Esc on a plain line swallowed the next key"
 
 # Suggestions from history: End accepts one, Esc dismisses it.
+# Suggestions are fetched in the background, so let the shell finish drawing
+# before each check.
 run 'print -r -- suggested-command > /dev/null'
-expect '❯'
-keys 'print -r -- sugg' 0.6; keys $'\e[F'; run ' > suggest-end'
+settle; screen=
+keys 'print -r -- sugg'
+expect 'ested-command' || fail "no suggestion appeared: ${(q+)screen}"
+settle
+keys $'\e[F'; run ' > suggest-end'
 [[ $(output suggest-end) == suggested-command ]] || fail "End didn't accept the suggestion: $(output suggest-end)"
-keys 'print -r -- sugg' 0.6; keys $'\e' 0.6; keys $'\e[F'; run 'X > suggest-esc'
+settle; screen=
+keys 'print -r -- sugg'
+expect 'ested-command' || fail "no suggestion appeared: ${(q+)screen}"
+settle
+keys $'\e' 0.6; keys $'\e[F'; run 'X > suggest-esc'
 [[ $(output suggest-esc) == suggX ]] || fail "Esc didn't dismiss the suggestion: $(output suggest-esc)"
 
 # Ctrl-G on an empty line switches to the chosen branch.
