@@ -87,6 +87,20 @@ expect $'repo trunk\n' || fail "prompt doesn't show the branch: ${(q+)screen}"
 run 'touch new-file'
 expect 'trunk*' || fail "prompt doesn't show a dirty repo: ${(q+)screen}"
 
+# The Node version shows anywhere in a Node project, and nowhere else.
+if (( $+commands[node] )); then
+  node_version=$(node --version)
+  mkdir -p $tmp/web/src && print '{}' > $tmp/web/package.json
+  git -C $tmp/web init -q
+  run "cd ${(q)tmp}/web/src"
+  expect "$node_version /" || fail "prompt doesn't show the Node version: ${(q+)screen}"
+  run "cd ${(q)tmp}"
+  expect '❯' && settle
+  [[ $screen == *$node_version* ]] && fail "prompt shows the Node version outside a Node project: ${(q+)screen}"
+  run "cd ${(q)tmp}/repo"
+  expect 'trunk*' || fail "didn't return to the repository: ${(q+)screen}"
+fi
+
 # Completion menu: the first Tab opens it, the arrows move, Enter picks
 # without running the line.
 keys 'ls -d '; keys $'\t' 0.6; keys $'\e[C'; keys $'\r'; run ' > menu-pick'
