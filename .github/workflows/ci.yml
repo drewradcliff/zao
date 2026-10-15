@@ -1,0 +1,30 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  shell:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install dependencies and ShellCheck
+        run: brew install fzf zoxide zsh-autosuggestions zsh-syntax-highlighting shellcheck
+
+      - name: Lint bin/zao
+        run: shellcheck bin/zao
+
+      # /bin/bash is macOS's bash 3.2, the oldest bin/zao has to run on.
+      - name: bin/zao runs
+        run: |
+          /bin/bash bin/zao --version
+          /bin/bash bin/zao init
+
+      - name: Config parses
+        run: for file in config/zao.zsh config/lib/*.zsh; do zsh -n "$file"; done
+
+      - name: Start zao and type into it
+        run: zsh .github/test.zsh

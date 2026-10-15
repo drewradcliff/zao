@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+# zao: zsh with thoughtful defaults. Upgrade with `brew upgrade zao`.
+
+set -euo pipefail
+
+ROOT="$(dirname "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")")"
+case "$ROOT" in
+  # Homebrew: use the opt/ path, which stays the same across upgrades.
+  */Cellar/zao/*) CONFIG="${ROOT%/Cellar/*}/opt/zao/share/zao" ;;
+  # Running from a checkout of the repo.
+  *) CONFIG="$ROOT/config" ;;
+esac
+
+case "${1:-}" in
+  init)
+    printf 'source %q\n' "$CONFIG/zao.zsh"
+    ;;
+  --version | -v)
+    echo "zao $(cat "$CONFIG/VERSION")"
+    ;;
+  *)
+    cat >&2 <<'EOF'
+Usage: zao init       Print the line that loads zao. Add to ~/.zshrc:
+                        eval "$(zao init)"
+       zao --version  Print the version
+EOF
+    [ "${1:-}" = --help ] || [ "${1:-}" = -h ]
+    ;;
+esac
