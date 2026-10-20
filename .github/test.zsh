@@ -13,6 +13,19 @@ trap 'zpty -d zao 2>/dev/null; rm -rf $tmp' EXIT
 mkdir -p $tmp/zdotdir $tmp/repo/alpha-dir $tmp/repo/beta-dir
 print -r -- "eval \"\$($root/bin/zao init)\"" > $tmp/zdotdir/.zshrc
 
+# A stand-in for `gh`: `gh pr create` opens a pull request for the branch,
+# which `gh pr view` then finds.
+mkdir -p $tmp/bin
+cat > $tmp/bin/gh <<'EOF'
+#!/bin/sh
+pr="$(git rev-parse --absolute-git-dir)/test-pr-$(git branch --show-current)"
+case "$1 $2" in
+  'pr create') echo '325 https://github.com/o/r/pull/325' > "$pr" ;;
+  'pr view') cat "$pr" 2>/dev/null || { echo 'no pull requests found for branch' >&2; exit 1; } ;;
+esac
+EOF
+chmod +x $tmp/bin/gh
+
 failures=0
 fail() { print -u2 "FAIL: $1"; (( failures++ )) }
 
@@ -64,7 +77,7 @@ output() {
 }
 
 export ZDOTDIR=$tmp/zdotdir HISTFILE=$tmp/history TERM=xterm-256color
-export XDG_CACHE_HOME=$tmp/cache _ZO_DATA_DIR=$tmp/zoxide
+export XDG_CACHE_HOME=$tmp/cache _ZO_DATA_DIR=$tmp/zoxide PATH=$tmp/bin:$PATH
 cd $tmp
 zpty zao zsh -i
 
@@ -142,6 +155,17 @@ expect 'from-history' && settle
 # Ctrl-G on an empty line switches to the chosen branch.
 keys $'\C-g' 1; keys 'feat' 0.5; keys $'\r'
 expect 'feature-x*' || fail "Ctrl-G didn't switch branches: ${(q+)screen}"
+
+# A pull request shows as soon as `gh` opens one, only on its branch.
+settle
+[[ $screen == *'PR #'* ]] && fail "prompt shows a pull request before there is one: ${(q+)screen}"
+run 'gh pr create'
+expect 'PR #325' || fail "prompt doesn't show the pull request after gh pr create: ${(q+)screen}"
+run 'git switch -q trunk'
+expect $'repo trunk*\n' && settle
+[[ $screen == *'repo trunk'*'PR #'* ]] && fail "prompt shows a pull request on trunk: ${(q+)screen}"
+run 'git switch -q feature-x'
+expect 'PR #325' || fail "prompt doesn't show the pull request after switching back: ${(q+)screen}"
 
 # With no other branches, Ctrl-G says so instead of opening an empty list.
 git init -q $tmp/solo
