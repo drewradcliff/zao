@@ -131,9 +131,24 @@ settle
 keys $'\e' 0.6; keys $'\e[F'; run 'X > suggest-esc'
 [[ $(output suggest-esc) == suggX ]] || fail "Esc didn't dismiss the suggestion: $(output suggest-esc)"
 
+# Ctrl-R puts the chosen command on the line. The list hides history numbers,
+# but fzf's widget still needs them to find the command.
+run 'print -r -- from-history >> history-pick'
+output history-pick > /dev/null; settle
+keys $'\C-r' 1; keys 'from-history' 0.5; keys $'\r' 1; keys $'\r'
+expect 'from-history' && settle
+[[ $(output history-pick) == $'from-history\nfrom-history' ]] || fail "Ctrl-R didn't put the command on the line: $(output history-pick)"
+
 # Ctrl-G on an empty line switches to the chosen branch.
 keys $'\C-g' 1; keys 'feat' 0.5; keys $'\r'
 expect 'feature-x*' || fail "Ctrl-G didn't switch branches: ${(q+)screen}"
+
+# With no other branches, Ctrl-G says so instead of opening an empty list.
+git init -q $tmp/solo
+git -C $tmp/solo -c user.name=t -c user.email=t@t commit -q --allow-empty -m init
+run "cd ${(q)tmp}/solo"; settle
+keys $'\C-g' 1
+expect 'No other branches' || fail "Ctrl-G didn't say there are no other branches: ${(q+)screen}"
 
 run 'exit'
 (( failures )) && exit 1

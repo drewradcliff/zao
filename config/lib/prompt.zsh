@@ -13,6 +13,7 @@
 zmodload zsh/datetime zsh/zselect
 
 typeset -g _zao_gap=0 _zao_cmd_start= _zao_cmd_time=
+typeset -gi _zao_status=0
 typeset -g _zao_git_dir= _zao_git_head= _zao_git_action= _zao_git_status= _zao_git_status_for=
 typeset -gi _zao_git_fd=0
 typeset -g _zao_node=
@@ -25,6 +26,7 @@ _zao_preexec() {
 }
 
 _zao_precmd() {
+  _zao_status=$?  # For the pickers, which draw their own ❯.
   (( _zao_gap )) && print
   _zao_gap=1
 
