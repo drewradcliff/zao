@@ -10,7 +10,7 @@
 
 (( $+commands[fzf] )) || return 0
 
-: ${FZF_DEFAULT_OPTS='--height=40% --min-height=12 --layout=reverse --info=hidden --no-separator --no-scrollbar --gutter=" " --pointer=▌ --marker=▌ --prompt="  " --color=hl:blue,hl+:blue,pointer:blue,marker:blue,prompt:magenta,info:8,gutter:-1,bg+:-1,fg+:-1:bold,border:8,preview-border:8'}
+: ${FZF_DEFAULT_OPTS='--height=40% --min-height=12 --layout=reverse --info=hidden --no-separator --no-scrollbar --gutter=" " --pointer=▌ --marker=▌ --prompt="  " --color=hl:blue,hl+:blue,pointer:blue,marker:blue,prompt:magenta,info:-1:dim,gutter:-1,bg+:-1,fg+:-1:bold,border:-1:dim,preview-border:-1:dim'}
 export FZF_DEFAULT_OPTS
 : ${FZF_CTRL_R_OPTS='--with-nth=2.. --ghost="Search history"'} ${FZF_CTRL_T_OPTS='--ghost="Search files"'}
 export FZF_CTRL_R_OPTS FZF_CTRL_T_OPTS

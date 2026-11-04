@@ -30,11 +30,11 @@ zstyle ':completion:*' group-name ''
 zstyle ':completion:*' list-dirs-first true
 zstyle ':completion:*' squeeze-slashes true
 zstyle ':completion:*' list-colors ${(s.:.)LS_COLORS} 'ma=37;44'
-zstyle ':completion:*:descriptions' format '%F{8}%d%f'
-zstyle ':completion:*:messages' format '%F{8}%d%f'
-zstyle ':completion:*:warnings' format '%F{8}No matches%f'
-zstyle ':completion:*:default' list-prompt '%F{8}%p%f'
-zstyle ':completion:*:default' select-prompt '%F{8}%p%f'
+zstyle ':completion:*:descriptions' format $'%{\e[2m%}%d%{\e[22m%}'
+zstyle ':completion:*:messages' format $'%{\e[2m%}%d%{\e[22m%}'
+zstyle ':completion:*:warnings' format $'%{\e[2m%}No matches%{\e[22m%}'
+zstyle ':completion:*:default' list-prompt $'%{\e[2m%}%p%{\e[22m%}'
+zstyle ':completion:*:default' select-prompt $'%{\e[2m%}%p%{\e[22m%}'
 zstyle ':completion:*' use-cache true
 zstyle ':completion:*' cache-path $ZAO_CACHE/completion
 # Most recently used first, rather than alphabetical.

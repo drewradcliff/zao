@@ -258,9 +258,13 @@ _zao_pr_timer_ready() {
   _zao_pr_timer_start
 }
 
+# Faint rather than gray (color 8): it fades the text's own color, so it reads
+# on light and dark backgrounds alike, whatever the theme's palette.
+typeset -g _zao_faint=$'%{\e[2m%}' _zao_unfaint=$'%{\e[22m%}'
+
 _zao_prompt_render() {
   local p=
-  [[ -n $SSH_CONNECTION ]] && p+='%F{8}%n@%m%f '
+  [[ -n $SSH_CONNECTION ]] && p+="$_zao_faint%n@%m$_zao_unfaint "
   [[ -n $_zao_node ]] && p+="%F{green}${_zao_node//\%/%%}%f "
   p+='%F{blue}%~%f'
 
@@ -268,7 +272,7 @@ _zao_prompt_render() {
     # Long branch names keep their end, which is usually what tells them apart.
     local head=$_zao_git_head
     (( $#head > 40 )) && head=…${head[-39,-1]}
-    p+=" %F{8}${head//\%/%%}%f"
+    p+=" $_zao_faint${head//\%/%%}$_zao_unfaint"
     local -a git=(${=_zao_git_status})
     (( git[1] )) && p+='%F{yellow}*%f'
     [[ -n $_zao_git_action ]] && p+=" %F{yellow}$_zao_git_action%f"
@@ -285,7 +289,7 @@ _zao_prompt_render() {
   if [[ -n $VIRTUAL_ENV ]]; then
     local venv=${VIRTUAL_ENV:t}
     [[ $venv == (.|)venv ]] && venv=${VIRTUAL_ENV:h:t}
-    p+=" %F{8}(${venv//\%/%%})%f"
+    p+=" $_zao_faint(${venv//\%/%%})$_zao_unfaint"
   fi
 
   [[ -n $_zao_cmd_time ]] && p+=" %F{yellow}$_zao_cmd_time%f"
@@ -293,7 +297,7 @@ _zao_prompt_render() {
   PROMPT="$p"$'\n''%(?.%F{magenta}.%F{red})❯%f '
 }
 
-PS2='%F{8}·%f '
+PS2="$_zao_faint·$_zao_unfaint "
 RPROMPT=
 
 autoload -Uz add-zsh-hook
